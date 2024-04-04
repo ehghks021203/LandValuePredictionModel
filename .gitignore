@@ -1,5 +1,6 @@
 *.ipynb_checkpoints
 __pycache__
-full_data.csv
-
-mykey.py
+*.bp
+config.py
+Dataset.csv
+DatasetWithoutCdData.csv
