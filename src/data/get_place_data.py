@@ -1,11 +1,5 @@
 from PyKakao import Local
 from enum import Enum
-import json
-import requests
-import math
-import csv
-import pandas as pd
-import numpy as np
 from config import API
 
 class Category(Enum):

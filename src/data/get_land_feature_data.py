@@ -20,5 +20,3 @@ def get_data(pnu: str, year: int):
         return request["landCharacteristicss"]["field"][0]
     else:
         return None
-    
-get_data("4413133028200240005", 2022)

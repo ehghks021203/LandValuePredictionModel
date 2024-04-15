@@ -9,7 +9,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 
-from config import BASE_DIR
+from config import Dataset
 
 SAVE_FILE_NAME = "Dataset.csv"
 IS_INCLUDE_PLACE_DATA = True
@@ -84,7 +84,7 @@ if __name__ == "__main__":
                     break
                 land["CPI"] = result
 
-                if IS_INCLUDE_PLACE_DATA:
+                if Dataset.IS_INCLUDE_PLACE_DATA:
                     rd = gpd.get_nearest_place_distance(addr)
                     rd_500 = gpd.get_place_count_in_radius(addr, 500)
                     rd_1000 = gpd.get_place_count_in_radius(addr, 1000)
