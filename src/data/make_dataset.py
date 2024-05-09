@@ -1,15 +1,13 @@
 import crawling_land_price_data as clpd
-import get_land_feature_data as glfd
-import get_fluctuation_rate_of_land_price as gfrolp
-import get_price_index_data as gpid
-import get_land_use_plan_data as glupd
 import get_place_data as gpd
-import convert_code as cc
+from land_api import LandFeatureAPI, LandUsePlanAPI, FluctuationRateOfLandPriceAPI
+from price_index_api import ProducerPriceIndexAPI, ConsumerPriceIndexAPI
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 
-from config import Dataset
+from config import Dataset, API
+
 
 SAVE_FILE_NAME = "Dataset.csv"
 IS_INCLUDE_PLACE_DATA = True
@@ -28,7 +26,8 @@ if __name__ == "__main__":
                 land["Price"] = int(land["Price"]*10000/land["DealArea"])
 
                 # Get land feature data
-                result = glfd.get_data(land["PNU"], land["Year"])
+                lf_api = LandFeatureAPI(API.LAND_API_KEY)
+                result = lf_api.get_data(land["PNU"], land["Year"])
                 if result == None:
                     break
                 addr = result["ldCodeNm"] + " "
@@ -46,40 +45,25 @@ if __name__ == "__main__":
                 land["RoadSide"] = "Rs" + result["roadSideCode"]
 
                 # Get fluctuation rate of land price data
-                result = gfrolp.get_by_region(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
+                frolp_api = FluctuationRateOfLandPriceAPI(API.LAND_API_KEY)
+                result = frolp_api.get_data_by_region(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
                 land["PclndIndex"] = result["pclndIndex"]
                 land["PclndChgRt"] = result["pclndChgRt"]
                 land["AcmtlPclndChgRt"] = result["acmtlPclndChgRt"]
 
-                result = gfrolp.get_large_cl_by_region(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
+                result = frolp_api.get_data_by_large_region(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
                 land["LargeClPclndIndex"] = result["pclndIndex"]
                 land["LargeClPclndChgRt"] = result["pclndChgRt"]
                 land["LargeClAcmtlPclndChgRt"] = result["acmtlPclndChgRt"]
 
-
-                # if cc.code2zoning(land["PrposArea1"][2:]) == "":
-                #     land["PclndIndexByZoning"] = None
-                #     land["PclndChgRtByZoning"] = None
-                #     land["AcmtlPclndChgRtByZoning"] = None
-                # else:
-                #     result = gfrolp.get_by_zoning(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
-                #     print(land["PrposArea1"][2:])
-                #     land["PclndIndexByZoning"] = result[cc.code2zoning(land["PrposArea1"][2:]) + "Index"]
-                #     land["PclndChgRtByZoning"] = result[cc.code2zoning(land["PrposArea1"][2:]) + "ChgRt"]
-                #     land["AcmtlPclndChgRtByZoning"] = result[cc.code2zoning(land["PrposArea1"][2:]) + "Acmtl"]
-
-                # Get fluctuation rate of land price data
-                # result = gfrolp.get_by_land_category(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
-                # land["PclndIndexByLandCategory"] = result[cc.code2landcategory(land["LadUseSittn"][2:]) + "Index"]
-                # land["PclndChgRtByLandCategory"] = result[cc.code2landcategory(land["LadUseSittn"][2:]) + "ChgRt"]
-                # land["AcmtlPclndChgRtByLandCategory"] = result[cc.code2landcategory(land["LadUseSittn"][2:]) + "Acmtl"]
-                
                 # Get price index data
-                result = gpid.get_producer_price_index_data(int(land["Year"]), int(land["Month"]))
+                ppi_api = ProducerPriceIndexAPI(API.ECOS_KEY)
+                result = ppi_api.get_data(int(land["Year"]), int(land["Month"]))
                 if result == None:
                     break
                 land["PPI"] = result
-                result = gpid.get_consumer_price_index_data(int(land["Year"]), int(land["Month"]))
+                cpi_api = ConsumerPriceIndexAPI(API.ECOS_KEY)
+                result = cpi_api.get_data(int(land["Year"]), int(land["Month"]))
                 if result == None:
                     break
                 land["CPI"] = result
@@ -98,8 +82,9 @@ if __name__ == "__main__":
                         land[category + "_1000m"] = rd_1000[category]
                         land[category + "_3000m"] = rd_3000[category]
 
-
-                result = glupd.get_data(land["PNU"])
+                # Get land use plan data
+                lup_api = LandUsePlanAPI(API.LAND_API_KEY)
+                result = lup_api.get_data(land["PNU"])
                 if result == None:
                     break
                 land["LandUsePlans"] = result

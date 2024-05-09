@@ -104,7 +104,5 @@ The trained AI model is designed to be applicable to various fields such as real
 <br/>
 
 ## **TODO:**
-- Incorporate cumulative land price change rate data from the base date to the transaction date.
-- Add features reflecting interest rates.
 - Ensemble learning of XGBoost model and LSTM model.
 - Consideration of the outlier selection method for the dataset.

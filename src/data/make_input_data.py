@@ -3,13 +3,11 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-import get_land_feature_data as glfd
-import get_fluctuation_rate_of_land_price as gfrolp
-import get_price_index_data as gpid
-import get_land_use_plan_data as glupd
+from land_api import LandFeatureAPI, LandUsePlanAPI, FluctuationRateOfLandPriceAPI
+from price_index_api import ProducerPriceIndexAPI, ConsumerPriceIndexAPI
 import get_place_data as gpd
 
-from config import Dataset
+from config import Dataset, API
 
 def make(pnu: str, date: str):
     land = {
@@ -19,7 +17,8 @@ def make(pnu: str, date: str):
     }
 
     # Get land feature data
-    result = glfd.get_data(land["PNU"], land["Year"])
+    lf_api = LandFeatureAPI(API.LAND_API_KEY)
+    result = lf_api.get_data(land["PNU"], land["Year"])
     if result == None:
         sys.exit("Failed to fetch land characteristic data from the API.")
 
@@ -38,22 +37,26 @@ def make(pnu: str, date: str):
     land["RoadSide"] = "Rs" + result["roadSideCode"]
     
     # Get fluctuation rate of land price data
-    result = gfrolp.get_by_region(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
+    frolp_api = FluctuationRateOfLandPriceAPI(API.LAND_API_KEY)
+    result = frolp_api.get_data_by_region(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
     land["PclndIndex"] = result["pclndIndex"]
     land["PclndChgRt"] = result["pclndChgRt"]
     land["AcmtlPclndChgRt"] = result["acmtlPclndChgRt"]
 
-    result = gfrolp.get_large_cl_by_region(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
+    result = frolp_api.get_data_by_large_region(land["PNU"][0:10], int(land["Year"]), int(land["Month"]))
     land["LargeClPclndIndex"] = result["pclndIndex"]
     land["LargeClPclndChgRt"] = result["pclndChgRt"]
     land["LargeClAcmtlPclndChgRt"] = result["acmtlPclndChgRt"]
 
     # Get price index data
-    result = gpid.get_producer_price_index_data(int(land["Year"]), int(land["Month"]))
+    ppi_api = ProducerPriceIndexAPI(API.ECOS_KEY)
+    result = ppi_api.get_data(int(land["Year"]), int(land["Month"]))
+    print(ppi_api.url)
     if result == None:
         sys.exit("Failed to fetch producer price index data from the API.")
     land["PPI"] = result
-    result = gpid.get_consumer_price_index_data(int(land["Year"]), int(land["Month"]))
+    cpi_api = ConsumerPriceIndexAPI(API.ECOS_KEY)
+    result = cpi_api.get_data(int(land["Year"]), int(land["Month"]))
     if result == None:
         sys.exit("Failed to fetch customer price index data from the API.")
     land["CPI"] = result
@@ -73,9 +76,16 @@ def make(pnu: str, date: str):
             land[category + "_3000m"] = rd_3000[category]
 
 
-    result = glupd.get_data(land["PNU"])
+    lup_api = LandUsePlanAPI(API.LAND_API_KEY)
+    result = lup_api.get_data(land["PNU"])
     if result == None:
         sys.exit("Failed to fetch land use plans data from the API.")
     land["LandUsePlans"] = result
 
     return land
+
+if __name__ == "__main__":
+    target_pnu = "1147010100109370018"
+    target_date = "202312"
+    target_land = make(target_pnu, target_date)
+    print(target_land)
